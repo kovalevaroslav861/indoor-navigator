@@ -1,35 +1,73 @@
+import { Icon } from '@/components/ui/icon';
+import { useColor } from '@/hooks/useColor';
+import { PlatformPressable } from '@react-navigation/elements';
+import { BlurView } from 'expo-blur';
+import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
+import { Home, Stars } from 'lucide-react-native';
 import React from 'react';
-
-import { Accelerometer } from 'expo-sensors';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Platform, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const primary = useColor('primary');
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: primary,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarButton: (props) => (
+          <PlatformPressable
+            {...props}
+            onPressIn={(ev) => {
+              if (process.env.EXPO_OS === 'ios') {
+                // Add a soft haptic feedback when pressing down on the tabs.
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }
+              props.onPressIn?.(ev);
+            }}
+          />
+        ),
+        tabBarBackground: () => {
+          if (Platform.OS === 'ios') {
+            return (
+              <BlurView
+                tint='systemChromeMaterial'
+                intensity={100}
+                style={StyleSheet.absoluteFill}
+              />
+            );
+          }
+
+          // On Android & Web: no background
+          return null;
+        },
+        tabBarStyle: Platform.select({
+          ios: {
+            // Use a transparent background on iOS to show the blur effect
+            position: 'absolute',
+          },
+          default: {},
+        }),
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name='index'
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name={Home} size={24} color={color} />
+          ),
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name='explore'
         options={{
           title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <Icon name={Stars} size={24} color={color} />
+          ),
         }}
       />
     </Tabs>
