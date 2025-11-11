@@ -1,6 +1,8 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 
+import { Accelerometer } from 'expo-sensors';
+
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
