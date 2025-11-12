@@ -72,19 +72,8 @@ export default function ModalScreen() {
       root_prevTranslationY.value = root_translationY.value;
     })
     .onUpdate((event) => {
-      const maxTranslateX = width / 2 - 10;
-      const maxTranslateY = height / 2 - 10;
-
-      root_translationX.value = clamp(
-        root_prevTranslationX.value + event.translationX,
-        -maxTranslateX,
-        maxTranslateX
-      );
-      root_translationY.value = clamp(
-        root_prevTranslationY.value + event.translationY,
-        -maxTranslateY,
-        maxTranslateY
-      );
+      root_translationX.value = root_prevTranslationX.value + event.translationX;
+      root_translationY.value = root_prevTranslationY.value + event.translationY;
     })
     .runOnJS(true);
 
@@ -106,17 +95,22 @@ export default function ModalScreen() {
       startAngle.value = angle.value;
     })
     .onUpdate((event) => {
-      angle.value = startAngle.value + event.rotation * 180 / Math.PI;
+      angle.value = (startAngle.value + event.rotation);
     })
     .runOnJS(true);
 
   const composed = Gesture.Simultaneous(rotation, pinch, rootPan);
 
-  const boxAnimatedStyles = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }, { rotate: `${angle.value}deg` }, { translateX: root_translationX.value },
-    { translateY: root_translationY.value }],
 
-  }));
+
+  const boxAnimatedStyles = useAnimatedStyle(() => {
+    let newX = root_translationX.value * Math.cos(angle.value) + root_translationY.value * Math.sin(angle.value);
+    let newY = -root_translationX.value * Math.sin(angle.value) + root_translationY.value * Math.cos(angle.value);;
+    return {
+      transform: [{ scale: scale.value }, { rotate: `${angle.value * 180 / Math.PI}deg` }, { translateX: newX },
+      { translateY: newY }],
+    }
+  });
 
 
   const [accel, setAccel] = useState(INIT_VALUE);
@@ -132,7 +126,7 @@ export default function ModalScreen() {
   const [accelSub, setAccelSub] = useState({});
   const [magSub, setMagSub] = useState({});
 
-    const animatedStyles = useAnimatedStyle(() => ({
+  const animatedStyles = useAnimatedStyle(() => ({
     transform: [
       { translateX: translationX.value + pos.x * AV },
       { translateY: translationY.value + pos.y * AV },
