@@ -4,7 +4,7 @@ import { PlatformPressable } from '@react-navigation/elements';
 import { BlurView } from 'expo-blur';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
-import { Home, Stars, PenTool, ToolCase, Map } from 'lucide-react-native';
+import { Home, Stars, PenTool, ToolCase, Map, Settings } from 'lucide-react-native';
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 
@@ -14,7 +14,7 @@ export default function TabLayout() {
   return (
     <Tabs
       detachInactiveScreens={true}
-      initialRouteName='sensors'
+      initialRouteName='map'
       screenOptions={{
         tabBarActiveTintColor: primary,
         headerShown: false,
@@ -78,22 +78,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name='index'
         options={{
-          title: 'Home',
+          title: 'Settings',
           tabBarIcon: ({ color }) => (
-            <Icon name={Home} size={24} color={color} />
+            <Icon name={Settings} size={24} color={color} />
           ),
         }}
       />
 
-      <Tabs.Screen
-        name='explore'
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => (
-            <Icon name={Stars} size={24} color={color} />
-          ),
-        }}
-      />
     </Tabs>
   );
 }

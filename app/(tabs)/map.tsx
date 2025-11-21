@@ -1,14 +1,16 @@
-import { StyleSheet, Dimensions, useAnimatedValue } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 import { useState, useEffect } from "react";
 import { Accelerometer, Magnetometer } from 'expo-sensors';
 import Animated, { useSharedValue, useAnimatedStyle } from 'react-native-reanimated';
 import { GestureDetector, Gesture, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { View } from "@/components/ui/view";
-import { Text } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
-import { ScrollView } from '@/components/ui/scroll-view';
+import { shallowEqual, useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
+import { ProfileState, profileSlice } from '@/store/profileSlice';
+import { AppDispatch, RootState } from '@/store';
 
+const { actions } = profileSlice;
 
 const { width, height } = Dimensions.get('screen');
 
@@ -24,22 +26,27 @@ const AV = 1000;
 
 export default function ModalScreen() {
 
-  const scale = useSharedValue(1);
+  const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+  const profile = useAppSelector(state => state.profile, shallowEqual);
+  const { x, y } = profile;
+
+  const scale = useSharedValue(profile.scale);
   const startScale = useSharedValue(0);
 
-  const angle = useSharedValue(0);
+  const angle = useSharedValue(profile.angle);
   const startAngle = useSharedValue(0);
 
-  const translationX = useSharedValue(0);
-  const translationY = useSharedValue(0);
-  const prevTranslationX = useSharedValue(0);
-  const prevTranslationY = useSharedValue(0);
+  const translationX = useSharedValue(x);
+  const translationY = useSharedValue(y);
+  const prevTranslationX = useSharedValue(x);
+  const prevTranslationY = useSharedValue(y);
 
   const root_translationX = useSharedValue(0);
   const root_translationY = useSharedValue(0);
   const root_prevTranslationX = useSharedValue(0);
   const root_prevTranslationY = useSharedValue(0);
 
+  const dispatch = useDispatch<AppDispatch>();
 
 
   const pan = Gesture.Pan()
@@ -62,6 +69,8 @@ export default function ModalScreen() {
         -maxTranslateY,
         maxTranslateY
       );
+
+      dispatch(actions.move({x: translationX.value, y: translationY.value}));
     })
     .runOnJS(true);
 
@@ -72,8 +81,19 @@ export default function ModalScreen() {
       root_prevTranslationY.value = root_translationY.value;
     })
     .onUpdate((event) => {
-      root_translationX.value = root_prevTranslationX.value + event.translationX;
-      root_translationY.value = root_prevTranslationY.value + event.translationY;
+      const maxTranslateX = width * (scale.value - 1) / 2;
+      const maxTranslateY = height * (scale.value - 1)  / 2;
+
+      root_translationX.value = clamp(
+        root_prevTranslationX.value + event.translationX,
+        -maxTranslateX,
+        maxTranslateX
+      );
+      root_translationY.value = clamp(
+        root_prevTranslationY.value + event.translationY,
+        -maxTranslateY,
+        maxTranslateY
+      );
     })
     .runOnJS(true);
 
@@ -87,6 +107,8 @@ export default function ModalScreen() {
         0.5,
         Math.min(width / 100, height / 100)
       );
+
+      dispatch(actions.zoom({scale: scale.value}));
     })
     .runOnJS(true);
 
@@ -96,6 +118,8 @@ export default function ModalScreen() {
     })
     .onUpdate((event) => {
       angle.value = (startAngle.value + event.rotation);
+
+      dispatch(actions.rotate({angle: angle.value}));
     })
     .runOnJS(true);
 
@@ -112,6 +136,7 @@ export default function ModalScreen() {
     }
   });
 
+  
 
   const [accel, setAccel] = useState(INIT_VALUE);
   const [mag, setMag] = useState(INIT_VALUE);
@@ -119,7 +144,6 @@ export default function ModalScreen() {
   const [velocity, setVelocity] = useState({ x: 0, y: 0, z: 0 })
   const [pos, setPos] = useState({ x: 0, y: 0, z: 0 });
   const [lastStamp, setLastStamp] = useState(0);
-  const [heading, setHeading] = useState(0);
 
   const [started, setStarted] = useState(false);
 
@@ -156,8 +180,6 @@ export default function ModalScreen() {
   useEffect(() => {
     if (lastStamp === 0) return;
 
-    let angle = 90 - Math.atan2(mag.y, mag.x) * (180 / Math.PI);
-    setHeading(angle < 0 ? angle + 360 : angle);
     setGrav(accel);
   }, [mag.x, mag.y, mag.z]);
 
@@ -207,7 +229,6 @@ export default function ModalScreen() {
     setAccel(INIT_VALUE);
     setGrav(INIT_VALUE);
     setMag(INIT_VALUE);
-    setHeading(0);
     setPos({ x: 0, y: 0, z: 0 });
   }
 

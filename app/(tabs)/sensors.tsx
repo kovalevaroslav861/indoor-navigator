@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Accelerometer, Magnetometer } from 'expo-sensors';
+import { EventSubscription } from "expo-modules-core";
 import { StyleSheet } from "react-native";
 
 import { Link } from 'expo-router';
@@ -25,8 +26,8 @@ export default function Sensors() {
 
     const [started, setStarted] = useState(false);
 
-    const [accelSub, setAccelSub] = useState({});
-    const [magSub, setMagSub] = useState({});
+    const [accelSub, setAccelSub] = useState<EventSubscription>();
+    const [magSub, setMagSub] = useState<EventSubscription>();
 
     const askPermissions = async () => {
         await Accelerometer.requestPermissionsAsync();
@@ -113,7 +114,7 @@ export default function Sensors() {
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={{margin: 5}}>Please hold your smart phone horizontally before you start.</Text>
+            <Text style={{margin: 5}}> </Text>
             <Animated.Image style={{margin: 'auto', transform: [{ rotate: `${heading}deg`}]}} source={require('@/assets/images/compass.png')}/>
             <Text> Accelerometer: {JSON.stringify(accel, null, 2)}</Text>
             <Text> Magnetometer: {JSON.stringify(mag, null, 2)}</Text>
